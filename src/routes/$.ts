@@ -3,8 +3,7 @@ import { proxyRequest } from "@/lib/proxy";
 
 const handler = ({ request }: { request: Request }) => proxyRequest(request);
 
-// The root path proxies the origin site's homepage (and its guest-auth redirect).
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/$")({
   server: {
     handlers: {
       GET: handler,
