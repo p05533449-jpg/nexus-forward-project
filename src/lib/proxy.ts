@@ -76,7 +76,8 @@ export async function proxyRequest(request: Request): Promise<Response> {
   }
   // Preserve each Set-Cookie separately; strip Domain so cookies bind to the proxy host
   const setCookies =
-    typeof (upstream.headers as Headers & { getSetCookie?: () => string[] }).getSetCookie === "function"
+    typeof (upstream.headers as Headers & { getSetCookie?: () => string[] }).getSetCookie ===
+    "function"
       ? (upstream.headers as Headers & { getSetCookie: () => string[] }).getSetCookie()
       : [upstream.headers.get("set-cookie")].filter((c): c is string => !!c);
   for (const cookie of setCookies) {
@@ -96,11 +97,26 @@ export async function proxyRequest(request: Request): Promise<Response> {
   const isText = TEXT_TYPES.some((t) => contentType.toLowerCase().includes(t));
 
   if (isText) {
-    const text = await upstream.text();
-    const rewritten = rewriteBranding(text);
+    let text = await upstream.text();
+    text = rewriteBranding(text);
+
+    if (contentType.toLowerCase().includes("text/html")) {
+      const fetchPatchScript = `<script>;(function(){try{var _f=typeof window!=="undefined"?window.fetch:typeof globalThis!=="undefined"?globalThis.fetch:undefined;if(_f&&typeof window!=="undefined"){try{Object.defineProperty(window,"fetch",{get:function(){return _f;},set:function(v){_f=v;},configurable:true,enumerable:true});}catch(e){}}if(_f&&typeof globalThis!=="undefined"&&globalThis!==window){try{Object.defineProperty(globalThis,"fetch",{get:function(){return _f;},set:function(v){_f=v;},configurable:true,enumerable:true});}catch(e){}}if(_f&&typeof self!=="undefined"&&self!==window){try{Object.defineProperty(self,"fetch",{get:function(){return _f;},set:function(v){_f=v;},configurable:true,enumerable:true});}catch(e){}}}catch(e){}})();</script>`;
+      if (text.includes("<head>")) {
+        text = text.replace("<head>", `<head>${fetchPatchScript}`);
+      } else if (/<head\b[^>]*>/i.test(text)) {
+        text = text.replace(/(<head\b[^>]*>)/i, `$1${fetchPatchScript}`);
+      } else {
+        text = `${fetchPatchScript}${text}`;
+      }
+    } else if (contentType.toLowerCase().includes("javascript") || url.pathname.endsWith(".js")) {
+      const jsPatch = `;(function(){try{var _f=typeof window!=="undefined"?window.fetch:typeof globalThis!=="undefined"?globalThis.fetch:undefined;if(_f&&typeof window!=="undefined"){try{Object.defineProperty(window,"fetch",{get:function(){return _f;},set:function(v){_f=v;},configurable:true,enumerable:true});}catch(e){}}if(_f&&typeof globalThis!=="undefined"&&globalThis!==window){try{Object.defineProperty(globalThis,"fetch",{get:function(){return _f;},set:function(v){_f=v;},configurable:true,enumerable:true});}catch(e){}}if(_f&&typeof self!=="undefined"&&self!==window){try{Object.defineProperty(self,"fetch",{get:function(){return _f;},set:function(v){_f=v;},configurable:true,enumerable:true});}catch(e){}}}catch(e){}})();\n`;
+      text = `${jsPatch}${text}`;
+    }
+
     resHeaders.delete("content-length");
     resHeaders.delete("content-security-policy");
-    return new Response(rewritten, { status: upstream.status, headers: resHeaders });
+    return new Response(text, { status: upstream.status, headers: resHeaders });
   }
 
   return new Response(upstream.body, { status: upstream.status, headers: resHeaders });

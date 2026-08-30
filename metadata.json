@@ -1,0 +1,6 @@
+{
+  "name": "Nexus Proxy Hub",
+  "description": "A proxy hub for PW NEXUS with custom branding and origin forwarding.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
