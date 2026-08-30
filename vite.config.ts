@@ -12,7 +12,9 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  // Target Cloudflare Pages: emits dist/_worker.js/ (Pages Advanced Mode) alongside
+  // static assets in dist/, which is the layout pages.dev expects.
   nitro: {
-    preset: "cloudflare-module",
+    preset: "cloudflare-pages",
   },
 });
