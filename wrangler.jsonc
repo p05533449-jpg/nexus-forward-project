@@ -1,21 +1,15 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "pw-nexus-proxy",
-  "main": "dist/server/index.mjs",
+  "main": ".output/server/index.mjs",
   "compatibility_date": "2026-08-30",
   "compatibility_flags": ["nodejs_compat"],
   "assets": {
     "binding": "ASSETS",
-    "directory": "dist/client",
+    "directory": ".output/public"
   },
-  "no_bundle": true,
-  "rules": [
-    {
-      "type": "ESModule",
-      "globs": ["**/*.mjs", "**/*.js"],
-    },
-  ],
   "observability": {
-    "enabled": true,
-  },
+    "enabled": true
+  }
 }
+
