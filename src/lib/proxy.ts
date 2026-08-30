@@ -70,7 +70,16 @@ export async function proxyRequest(request: Request): Promise<Response> {
   const resHeaders = new Headers();
   for (const [key, value] of upstream.headers.entries()) {
     if (HOP_BY_HOP.has(key.toLowerCase())) continue;
+    if (key.toLowerCase() === "set-cookie") continue; // handled below
     resHeaders.set(key, value);
+  }
+  // Preserve each Set-Cookie separately; strip Domain so cookies bind to the proxy host
+  const setCookies =
+    typeof (upstream.headers as Headers & { getSetCookie?: () => string[] }).getSetCookie === "function"
+      ? (upstream.headers as Headers & { getSetCookie: () => string[] }).getSetCookie()
+      : [upstream.headers.get("set-cookie")].filter((c): c is string => !!c);
+  for (const cookie of setCookies) {
+    resHeaders.append("set-cookie", cookie.replace(/;\s*Domain=[^;]*/gi, ""));
   }
 
   // Rewrite redirects so the browser stays on the proxy host
