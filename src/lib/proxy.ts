@@ -29,6 +29,10 @@ const TEXT_TYPES = [
   "text/xml",
 ];
 
+const FETCH_SETTER_SCRIPT = `<script>!(function(){if(typeof window!=="undefined"){try{var _f=window.fetch?window.fetch.bind(window):undefined;Object.defineProperty(window,"fetch",{get:function(){return _f},set:function(v){_f=v},configurable:true,enumerable:true})}catch(e){try{if(typeof Window!=="undefined"&&Window.prototype){Object.defineProperty(Window.prototype,"fetch",{get:function(){return _f},set:function(v){_f=v},configurable:true,enumerable:true})}}catch(_){}}}})();</script>`;
+
+const FETCH_SETTER_JS = `;!(function(){if(typeof window!=="undefined"&&!window.__FETCH_SETTER_INSTALLED__){window.__FETCH_SETTER_INSTALLED__=true;try{var _f=window.fetch?window.fetch.bind(window):undefined;Object.defineProperty(window,"fetch",{get:function(){return _f},set:function(v){_f=v},configurable:true,enumerable:true})}catch(e){try{if(typeof Window!=="undefined"&&Window.prototype){Object.defineProperty(Window.prototype,"fetch",{get:function(){return _f},set:function(v){_f=v},configurable:true,enumerable:true})}}catch(_){}}}}();`;
+
 function rewriteBranding(text: string): string {
   return text
     .replaceAll("PW-MARCO", "PW NEXUS")
@@ -76,7 +80,8 @@ export async function proxyRequest(request: Request): Promise<Response> {
   }
   // Preserve each Set-Cookie separately; strip Domain so cookies bind to the proxy host
   const setCookies =
-    typeof (upstream.headers as Headers & { getSetCookie?: () => string[] }).getSetCookie === "function"
+    typeof (upstream.headers as Headers & { getSetCookie?: () => string[] }).getSetCookie ===
+    "function"
       ? (upstream.headers as Headers & { getSetCookie: () => string[] }).getSetCookie()
       : [upstream.headers.get("set-cookie")].filter((c): c is string => !!c);
   for (const cookie of setCookies) {
@@ -97,7 +102,21 @@ export async function proxyRequest(request: Request): Promise<Response> {
 
   if (isText) {
     const text = await upstream.text();
-    const rewritten = rewriteBranding(text);
+    let rewritten = rewriteBranding(text);
+    const lowerContentType = contentType.toLowerCase();
+    if (lowerContentType.includes("text/html")) {
+      if (rewritten.includes("<head>")) {
+        rewritten = rewritten.replace("<head>", `<head>${FETCH_SETTER_SCRIPT}`);
+      } else if (rewritten.includes("<head ")) {
+        rewritten = rewritten.replace(/<head[^>]*>/, `$&${FETCH_SETTER_SCRIPT}`);
+      } else if (rewritten.includes("<html")) {
+        rewritten = rewritten.replace(/<html[^>]*>/, `$&<head>${FETCH_SETTER_SCRIPT}</head>`);
+      } else {
+        rewritten = FETCH_SETTER_SCRIPT + rewritten;
+      }
+    } else if (lowerContentType.includes("javascript")) {
+      rewritten = FETCH_SETTER_JS + rewritten;
+    }
     resHeaders.delete("content-length");
     resHeaders.delete("content-security-policy");
     return new Response(rewritten, { status: upstream.status, headers: resHeaders });

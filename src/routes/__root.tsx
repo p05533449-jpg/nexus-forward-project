@@ -104,6 +104,11 @@ function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `!(function(){if(typeof window!=="undefined"){try{var _f=window.fetch?window.fetch.bind(window):undefined;Object.defineProperty(window,"fetch",{get:function(){return _f},set:function(v){_f=v},configurable:true,enumerable:true})}catch(e){try{if(typeof Window!=="undefined"&&Window.prototype){Object.defineProperty(Window.prototype,"fetch",{get:function(){return _f},set:function(v){_f=v},configurable:true,enumerable:true})}}catch(_){}}}})();`,
+          }}
+        />
         <HeadContent />
       </head>
       <body>
