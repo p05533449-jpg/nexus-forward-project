@@ -33,6 +33,7 @@ function rewriteBranding(text: string): string {
   return text
     .replaceAll("PW-MARCO", "PW NEXUS")
     .replaceAll("t.me/official_marco_22", "t.me/PWNexuss")
+    .replaceAll("official_marco_22", "PWNexuss")
     .replaceAll(
       "https://i.ibb.co/YBbwNGxz/Logo-pw-removebg-preview.png",
       "https://cdn.phototourl.com/free/2026-08-30-8829c7ec-f311-468b-ba24-87efba53696d.png",
