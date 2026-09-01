@@ -32,7 +32,12 @@ const TEXT_TYPES = [
 function rewriteBranding(text: string): string {
   return text
     .replaceAll("PW-MARCO", "PW NEXUS")
+    .replaceAll("PW Micro", "PW NEXUS")
+    .replaceAll("PW micro", "PW NEXUS")
+    .replaceAll("Pw Micro", "PW NEXUS")
+    .replaceAll("pw micro", "PW NEXUS")
     .replaceAll("t.me/official_marco_22", "t.me/PWNexuss")
+    .replaceAll("@official_marco_22", "@PWNexuss")
     .replaceAll("official_marco_22", "PWNexuss")
     .replaceAll(
       "https://i.ibb.co/YBbwNGxz/Logo-pw-removebg-preview.png",
