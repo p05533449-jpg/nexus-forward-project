@@ -12,9 +12,13 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
-  // Target Cloudflare Pages: emits dist/_worker.js/ (Pages Advanced Mode) alongside
-  // static assets in dist/, which is the layout pages.dev expects.
+  // Deploy target is auto-detected:
+  //  - On Vercel (VERCEL=1 is set by their build env) -> Build Output API (.vercel/output)
+  //  - Otherwise -> Cloudflare Pages (dist/_worker.js/), which Lovable hosting expects.
+  // You can also force it with NITRO_PRESET=vercel / cloudflare-pages.
   nitro: {
-    preset: "cloudflare-pages",
+    preset:
+      process.env["NITRO_PRESET"] ??
+      (process.env["VERCEL"] ? "vercel" : "cloudflare-pages"),
   },
 });
